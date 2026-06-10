@@ -1,0 +1,1088 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Vela — Insurance Intelligence</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:#fff;color:#1a1a1a;height:100vh;overflow:hidden;display:flex;flex-direction:column}
+
+/* ── ONBOARDING SCREEN ── */
+#onboarding{position:fixed;inset:0;background:#fff;z-index:999;display:flex;align-items:center;justify-content:center;animation:fadeIn .3s ease}
+.ob-card{width:480px;padding:44px 48px;text-align:center}
+.ob-logo{font-size:42px;font-weight:800;letter-spacing:-1.5px;color:#1a1a1a;margin-bottom:4px}.ob-logo span{color:#7c5cfc}
+.ob-tagline{font-size:14px;color:#888;margin-bottom:36px}
+.ob-step{display:none}.ob-step.active{display:block;animation:slideUp .25s ease}
+@keyframes slideUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.ob-q{font-size:16px;font-weight:700;color:#1a1a1a;margin-bottom:6px}
+.ob-hint{font-size:12px;color:#999;margin-bottom:20px}
+.ob-opts{display:grid;gap:10px;margin-bottom:24px}
+.ob-opt{border:1.5px solid #e5e5e5;border-radius:12px;padding:14px 18px;cursor:pointer;text-align:left;transition:.15s;display:flex;align-items:center;gap:12px;background:#fff}
+.ob-opt:hover{border-color:#7c5cfc;background:#f8f6ff}
+.ob-opt.sel{border-color:#7c5cfc;background:#f3f0ff}
+.ob-opt-icon{font-size:22px;flex-shrink:0}
+.ob-opt-text{font-size:13px;font-weight:600;color:#1a1a1a}
+.ob-opt-sub{font-size:11px;color:#999;margin-top:2px}
+.ob-lob-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:24px}
+.ob-lob{border:1.5px solid #e5e5e5;border-radius:10px;padding:12px;cursor:pointer;transition:.15s;text-align:center}
+.ob-lob:hover{border-color:#7c5cfc}
+.ob-lob.sel{border-color:#7c5cfc;background:#f3f0ff}
+.ob-lob-icon{font-size:24px;margin-bottom:4px}
+.ob-lob-name{font-size:12px;font-weight:700;color:#1a1a1a}
+.ob-region-sel{width:100%;border:1.5px solid #e5e5e5;border-radius:10px;padding:12px 14px;font-size:14px;font-family:inherit;outline:none;background:#fff;margin-bottom:24px;cursor:pointer;transition:.15s}
+.ob-region-sel:focus{border-color:#7c5cfc}
+.ob-btn{width:100%;background:#7c5cfc;color:#fff;border:none;border-radius:12px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;transition:.15s}
+.ob-btn:hover{background:#6b4ee0}
+.ob-btn:disabled{background:#ccc;cursor:not-allowed}
+.ob-back{background:transparent;border:none;color:#888;font-size:13px;cursor:pointer;margin-top:12px;padding:6px}
+.ob-back:hover{color:#1a1a1a}
+.ob-progress{display:flex;gap:5px;justify-content:center;margin-bottom:32px}
+.ob-dot{width:6px;height:6px;border-radius:50%;background:#e5e5e5;transition:.2s}
+.ob-dot.active{background:#7c5cfc;width:20px;border-radius:3px}
+.ob-multi-hint{font-size:11px;color:#7c5cfc;margin-bottom:10px;text-align:left}
+
+/* ── APP SHELL ── */
+#app{display:none;flex-direction:column;height:100vh}
+#app.visible{display:flex}
+
+/* ── TOP BAR ── */
+.topbar{height:48px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;border-bottom:1px solid #f0f0f0;flex-shrink:0;background:#fff}
+.brand{font-size:18px;font-weight:800;letter-spacing:-.5px;color:#1a1a1a;cursor:pointer}.brand span{color:#7c5cfc}
+.mode-bar{display:flex;align-items:center;background:#f5f5f5;border-radius:20px;padding:3px 4px;gap:2px}
+.mode-btn{padding:4px 13px;border-radius:16px;border:none;background:transparent;font-size:12px;font-weight:500;color:#666;cursor:pointer;transition:.12s;white-space:nowrap}
+.mode-btn.active{background:#fff;color:#1a1a1a;font-weight:600;box-shadow:0 1px 4px rgba(0,0,0,.10)}
+.tb-right{display:flex;align-items:center;gap:10px}
+.ctx-badge{font-size:11px;background:#f3f0ff;color:#7c5cfc;border:1px solid #d4c9fc;padding:2px 9px;border-radius:12px;font-weight:600;cursor:pointer;transition:.15s}
+.ctx-badge:hover{background:#ece8ff}
+.sub-badge{font-size:11px;background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;padding:2px 9px;border-radius:12px;font-weight:600}
+.avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#7c5cfc,#a78bfa);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer}
+
+/* ── LAYOUT ── */
+.layout{display:flex;flex:1;overflow:hidden}
+
+/* ── SIDEBAR ── */
+.sidebar{width:50px;border-right:1px solid #f0f0f0;display:flex;flex-direction:column;padding:8px 6px;gap:2px;background:#fafafa;flex-shrink:0;overflow:visible;z-index:10;transition:width .2s ease}
+.sidebar.expanded{width:210px}
+.sb-toggle{width:36px;height:36px;border-radius:9px;border:none;background:transparent;cursor:pointer;color:#888;font-size:16px;display:flex;align-items:center;justify-content:center;margin-bottom:6px;transition:.15s}
+.sb-toggle:hover{background:#efefef;color:#333}
+.sb-sep{height:1px;background:#eeeeee;margin:5px 0}
+.sb-sect{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#bbb;padding:6px 8px 2px;white-space:nowrap;overflow:hidden;opacity:0;transition:opacity .15s}
+.sidebar.expanded .sb-sect{opacity:1}
+.nav-btn{width:100%;display:flex;align-items:center;gap:10px;padding:8px 8px;border-radius:9px;border:none;background:transparent;color:#555;cursor:pointer;transition:.12s;text-align:left;position:relative;white-space:nowrap}
+.nav-btn:hover{background:#f0f0f0;color:#1a1a1a}
+.nav-btn.active{background:#f3f0ff;color:#7c5cfc}
+.nav-btn .ni{font-size:16px;flex-shrink:0;width:20px;text-align:center}
+.nav-btn .nl{font-size:12.5px;font-weight:500;opacity:0;transition:opacity .1s;pointer-events:none;overflow:hidden}
+.sidebar.expanded .nav-btn .nl{opacity:1}
+/* Tooltip */
+.ttip{position:absolute;left:48px;top:50%;transform:translateY(-50%);background:#1a1a1a;color:#fff;font-size:11px;padding:7px 11px;border-radius:8px;white-space:nowrap;pointer-events:none;opacity:0;z-index:200;line-height:1.5;max-width:240px;box-shadow:0 4px 12px rgba(0,0,0,.2)}
+.ttip::before{content:'';position:absolute;left:-5px;top:50%;transform:translateY(-50%);border:5px solid transparent;border-right-color:#1a1a1a;border-left:0}
+.sidebar:not(.expanded) .nav-btn:hover .ttip{opacity:1;transition:opacity .15s .3s}
+
+/* ── MAIN ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+
+/* ── CHAT AREA ── */
+.chat-area{flex:1;overflow-y:auto;display:flex;flex-direction:column}
+.chat-inner{max-width:700px;width:100%;margin:0 auto;padding:28px 20px 0;flex:1;display:flex;flex-direction:column}
+
+/* Welcome — pure, minimal, like Claude/Gemini */
+.welcome{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center}
+.wlc-logo{font-size:32px;font-weight:800;letter-spacing:-1px;color:#1a1a1a;margin-bottom:6px}.wlc-logo span{color:#7c5cfc}
+.wlc-sub{font-size:14px;color:#aaa;margin-bottom:0}
+
+/* Messages */
+.msg{display:flex;gap:10px;margin-bottom:20px;animation:msgIn .2s ease}
+@keyframes msgIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.msg.user{flex-direction:row-reverse}
+.ma{width:26px;height:26px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;margin-top:2px}
+.ma.ai{background:linear-gradient(135deg,#7c5cfc,#a78bfa);color:#fff}
+.ma.user{background:#1a1a1a;color:#fff}
+.mb{max-width:88%}
+.msg.user .mb{display:flex;justify-content:flex-end}
+.bbl{display:inline-block;padding:10px 14px;border-radius:14px;font-size:13.5px;line-height:1.65}
+.bbl.ai{background:#f7f7f7;border-bottom-left-radius:4px}
+.bbl.user{background:#1a1a1a;color:#fff;border-bottom-right-radius:4px}
+.bbl code{background:#e8e8e8;padding:1px 5px;border-radius:4px;font-family:'SF Mono',monospace;font-size:12px}
+.bbl pre{background:#1e1e2e;color:#cdd6f4;padding:12px;border-radius:8px;font-size:11.5px;overflow-x:auto;margin:8px 0;font-family:'SF Mono',monospace;line-height:1.65}
+.mmeta{display:flex;gap:6px;margin-top:5px;flex-wrap:wrap;align-items:center}
+.tp{display:inline-flex;align-items:center;font-size:10px;padding:2px 7px;border-radius:9px;font-weight:600}
+.tp-l1{background:#ede9fe;color:#5b21b6}.tp-l2{background:#dcfce7;color:#166534}.tp-conf{background:#f3f0ff;color:#7c5cfc;border:1px solid #d4c9fc}
+.tp-src{background:transparent;color:#7c5cfc;font-size:10px;cursor:pointer;text-decoration:underline}
+.think-block{background:#fffbf0;border:1px solid #fde68a;border-radius:8px;padding:9px 13px;margin-bottom:8px;font-size:12px;color:#78550a;line-height:1.6}
+.think-block summary{cursor:pointer;font-weight:600;color:#b45309;margin-bottom:3px}
+
+/* ── INPUT AREA ── */
+.input-area{padding:14px 20px 18px;flex-shrink:0}
+.input-wrap{max-width:700px;margin:0 auto}
+.input-box-row{position:relative}
+.input-box{width:100%;border:1.5px solid #e0e0e0;border-radius:14px;padding:13px 52px 13px 16px;font-size:14px;line-height:1.5;outline:none;font-family:inherit;resize:none;max-height:180px;transition:.15s;background:#fff}
+.input-box:focus{border-color:#7c5cfc;box-shadow:0 0 0 3px rgba(124,92,252,.08)}
+.send-btn{position:absolute;right:10px;bottom:10px;width:32px;height:32px;border-radius:8px;border:none;background:#1a1a1a;color:#fff;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:.15s}
+.send-btn:hover{background:#7c5cfc}
+.send-btn:disabled{background:#ddd;cursor:not-allowed}
+.input-footer{display:flex;justify-content:space-between;align-items:center;margin-top:7px;flex-wrap:wrap;gap:4px}
+.footer-left{display:flex;align-items:center;gap:8px}
+.attach-btn{border:none;background:transparent;cursor:pointer;color:#bbb;font-size:17px;padding:3px;border-radius:5px;transition:.15s}
+.attach-btn:hover{color:#7c5cfc}
+.mode-hint{font-size:11px;color:#ccc}
+.footer-right{font-size:11px;color:#e0e0e0}
+
+/* ── PANEL OVERLAY ── */
+.panel{position:absolute;top:0;right:0;bottom:0;width:660px;background:#fff;border-left:1px solid #f0f0f0;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .22s cubic-bezier(.4,0,.2,1);z-index:30;box-shadow:-6px 0 30px rgba(0,0,0,.07)}
+.panel.open{transform:translateX(0)}
+.ph{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid #f0f0f0;flex-shrink:0}
+.ph-title{font-size:14px;font-weight:700;color:#1a1a1a}
+.ph-sub{font-size:11px;color:#bbb;margin-top:2px}
+.ph-right{display:flex;align-items:center;gap:8px}
+.close-btn{width:28px;height:28px;border-radius:6px;border:none;background:transparent;cursor:pointer;font-size:16px;color:#bbb;display:flex;align-items:center;justify-content:center;transition:.15s}
+.close-btn:hover{background:#f5f5f5;color:#555}
+
+/* LOB bar — appears in every panel */
+.lob-bar{display:flex;align-items:center;gap:6px;padding:10px 18px;border-bottom:1px solid #f5f5f5;background:#fafafa;flex-shrink:0;overflow-x:auto}
+.lob-label{font-size:10px;font-weight:700;color:#bbb;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;margin-right:2px}
+.lob-btn{padding:4px 12px;border-radius:16px;border:1.5px solid #e5e5e5;background:#fff;font-size:11px;font-weight:600;color:#666;cursor:pointer;transition:.12s;white-space:nowrap;flex-shrink:0}
+.lob-btn:hover{border-color:#7c5cfc;color:#7c5cfc}
+.lob-btn.active{border-color:#7c5cfc;background:#f3f0ff;color:#7c5cfc}
+
+/* Panel tabs */
+.ptabs{display:flex;border-bottom:1px solid #f0f0f0;padding:0 18px;flex-shrink:0}
+.ptab{padding:9px 14px;border:none;background:transparent;font-size:12px;font-weight:500;color:#aaa;cursor:pointer;border-bottom:2px solid transparent;transition:.12s}
+.ptab.active{color:#7c5cfc;border-bottom-color:#7c5cfc;font-weight:600}
+.pbody{flex:1;overflow-y:auto;padding:18px}
+
+/* Panel components */
+.p-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#bbb;margin-bottom:8px}
+.kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.kpi{background:#fafafa;border:1px solid #f0f0f0;border-radius:10px;padding:12px}
+.kpi-val{font-size:20px;font-weight:800;color:#1a1a1a}
+.kpi-label{font-size:11px;color:#bbb;margin-top:2px}
+.kpi-delta{font-size:11px;font-weight:600;margin-top:3px}
+.up{color:#059669}.dn{color:#dc2626}.wn{color:#d97706}
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{background:#f8f8f8;color:#888;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.4px;padding:8px 10px;text-align:left;border-bottom:1px solid #f0f0f0}
+.tbl td{padding:9px 10px;border-bottom:1px solid #f8f8f8;color:#333}
+.tbl tr:hover td{background:#fafafa}
+.pill{display:inline-block;padding:2px 8px;border-radius:9px;font-size:10px;font-weight:700}
+.pg{background:#d1fae5;color:#065f46}.py{background:#fef3c7;color:#92400e}.pr{background:#fee2e2;color:#991b1b}.pb{background:#dbeafe;color:#1e40af}.pp{background:#f3f0ff;color:#5b21b6}
+.pcard{background:#fafafa;border:1px solid #f0f0f0;border-radius:10px;padding:14px;margin-bottom:10px;cursor:pointer;transition:.15s}
+.pcard:hover{border-color:#7c5cfc;background:#faf9ff}
+.pcard-title{font-size:13px;font-weight:600;color:#1a1a1a;margin-bottom:4px}
+.pcard-desc{font-size:12px;color:#888;line-height:1.5}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.fg{display:flex;flex-direction:column;gap:4px}
+.fg label{font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.4px}
+.fc{border:1.5px solid #e8e8e8;border-radius:8px;padding:8px 11px;font-size:13px;outline:none;font-family:inherit;transition:.15s}
+.fc:focus{border-color:#7c5cfc}
+.btn-p{background:#7c5cfc;color:#fff;border:none;border-radius:9px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;transition:.15s}
+.btn-p:hover{background:#6b4ee0}
+.btn-o{background:#fff;color:#1a1a1a;border:1.5px solid #e8e8e8;border-radius:9px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;transition:.15s}
+.btn-o:hover{background:#f5f5f5}
+.btn-sm{padding:5px 12px;font-size:12px}
+.code-blk{background:#1e1e2e;color:#cdd6f4;border-radius:10px;padding:14px;font-family:'SF Mono',Menlo,monospace;font-size:11.5px;line-height:1.7;overflow-x:auto;margin:10px 0;position:relative}
+.code-blk .cm{color:#6c7086}.code-blk .kw{color:#cba6f7}.code-blk .fn{color:#89b4fa}.code-blk .st{color:#a6e3a1}.code-blk .nm{color:#fab387}.code-blk .op{color:#89dceb}
+.copy-btn{position:absolute;top:8px;right:8px;background:#313244;color:#9399b2;border:none;border-radius:5px;padding:3px 9px;font-size:10px;cursor:pointer}
+.copy-btn:hover{background:#45475a;color:#cdd6f4}
+.res-box{background:#faf9ff;border:1px solid #e0d9fc;border-radius:10px;padding:13px;margin-top:10px;font-size:13px;line-height:1.7;color:#333}
+.res-box strong{color:#7c5cfc}
+.alert{background:#fef9c3;border:1px solid #fde68a;border-radius:8px;padding:10px 13px;font-size:12px;color:#92400e;margin-bottom:12px}
+.alert.info{background:#f3f0ff;border-color:#c4b5fd;color:#5b21b6}
+.alert.ok{background:#f0fdf4;border-color:#bbf7d0;color:#166534}
+.prog{background:#f0f0f0;border-radius:3px;height:5px;overflow:hidden;margin-top:5px}
+.prog-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#7c5cfc,#a78bfa)}
+.tag{display:inline-block;font-size:10px;padding:2px 7px;border-radius:4px;font-weight:600;margin-right:3px}
+.tag-b{background:#dbeafe;color:#1e40af}.tag-g{background:#dcfce7;color:#166534}.tag-o{background:#ffedd5;color:#c2410c}.tag-p{background:#f3f0ff;color:#5b21b6}
+.divider{border:none;border-top:1px solid #f5f5f5;margin:14px 0}
+.sim-row{display:flex;align-items:center;padding:9px 0;border-bottom:1px solid #f8f8f8;font-size:12px;gap:10px}
+.sim-row:last-child{border-bottom:none}
+.sim-m{font-weight:600;color:#666;width:56px;flex-shrink:0}
+.sim-track{flex:1;background:#f0f0f0;border-radius:3px;height:7px;overflow:hidden}
+.sim-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#7c5cfc,#a78bfa)}
+.sim-val{font-weight:700;color:#1a1a1a;width:64px;text-align:right;flex-shrink:0}
+.sim-d{font-size:10px;font-weight:700;width:40px;text-align:right;flex-shrink:0}
+.flex-row{display:flex;gap:14px;align-items:flex-start}
+.score-ring{width:68px;height:68px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;flex-shrink:0}
+
+/* ── SETTINGS MODAL ── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:500;display:none;align-items:center;justify-content:center}
+.modal-bg.open{display:flex}
+.modal{background:#fff;border-radius:16px;padding:32px;width:440px;box-shadow:0 20px 60px rgba(0,0,0,.15)}
+.modal-title{font-size:16px;font-weight:700;margin-bottom:20px;display:flex;align-items:center;gap:8px}
+.modal-close{margin-left:auto;background:transparent;border:none;font-size:20px;cursor:pointer;color:#bbb}
+.modal-close:hover{color:#555}
+.modal-foot{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}
+
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+</style>
+</head>
+<body>
+<!-- ── BETA BANNER ── -->
+<div id="beta-banner" style="background:#fffbeb;color:#92400e;padding:8px 20px;text-align:center;font-size:12.5px;border-bottom:1px solid #fde68a;display:flex;align-items:center;justify-content:center;gap:14px;flex-shrink:0;z-index:1000;position:relative">
+  🚧 <strong>Vela Beta</strong> — AI responses are for professional reference only. Always verify regulatory citations independently.
+  <a href="mailto:sapansane@gmail.com" style="color:#92400e;font-weight:700;text-decoration:underline">Send feedback →</a>
+  <button onclick="document.getElementById('beta-banner').style.display='none'" style="background:transparent;border:none;cursor:pointer;color:#92400e;font-size:17px;line-height:1;padding:0 4px">✕</button>
+</div>
+
+<!-- ════════════════════════════════════════
+     ONBOARDING / LOGIN SCREEN
+════════════════════════════════════════ -->
+<div id="onboarding">
+  <div class="ob-card">
+    <div class="ob-logo">Vel<span>a</span></div>
+    <div class="ob-tagline">Insurance intelligence, built for professionals</div>
+
+    <div class="ob-progress">
+      <div class="ob-dot active" id="d1"></div>
+      <div class="ob-dot" id="d2"></div>
+      <div class="ob-dot" id="d3"></div>
+    </div>
+
+    <!-- Step 1: Region -->
+    <div class="ob-step active" id="step1">
+      <div class="ob-q">Which region are you primarily working in?</div>
+      <div class="ob-hint">Vela will prioritise regulations, circulars, and case law from this region. You can change this anytime in Settings.</div>
+      <select class="ob-region-sel" id="ob-region">
+        <option value="">Select your region…</option>
+        <optgroup label="Asia Pacific">
+          <option value="IN">🇮🇳 India (IRDAI)</option>
+          <option value="SG">🇸🇬 Singapore (MAS)</option>
+          <option value="MY">🇲🇾 Malaysia (BNM)</option>
+          <option value="AU">🇦🇺 Australia (APRA)</option>
+          <option value="JP">🇯🇵 Japan (FSA)</option>
+          <option value="HK">🇭🇰 Hong Kong (IA)</option>
+          <option value="CN">🇨🇳 China (CBIRC)</option>
+        </optgroup>
+        <optgroup label="Middle East &amp; Africa">
+          <option value="AE">🇦🇪 UAE (CBUAE / IA)</option>
+          <option value="SA">🇸🇦 Saudi Arabia (SAMA)</option>
+          <option value="ZA">🇿🇦 South Africa (FSCA)</option>
+        </optgroup>
+        <optgroup label="Europe">
+          <option value="GB">🇬🇧 United Kingdom (FCA / PRA)</option>
+          <option value="DE">🇩🇪 Germany (BaFin)</option>
+          <option value="FR">🇫🇷 France (ACPR)</option>
+          <option value="CH">🇨🇭 Switzerland (FINMA)</option>
+          <option value="EU">🇪🇺 EU — Solvency II</option>
+        </optgroup>
+        <optgroup label="Americas">
+          <option value="US">🇺🇸 United States (NAIC / State DOIs)</option>
+          <option value="CA">🇨🇦 Canada (OSFI)</option>
+          <option value="BR">🇧🇷 Brazil (SUSEP)</option>
+        </optgroup>
+        <optgroup label="Global">
+          <option value="GL">🌐 Global / Multi-jurisdiction</option>
+        </optgroup>
+      </select>
+      <button class="ob-btn" onclick="obNext(1)" id="btn1" disabled>Continue →</button>
+      <script>document.getElementById('ob-region').addEventListener('change',function(){document.getElementById('btn1').disabled=!this.value})</script>
+    </div>
+
+    <!-- Step 2: Lines of Business -->
+    <div class="ob-step" id="step2">
+      <div class="ob-q">What lines of business do you work with?</div>
+      <div class="ob-hint">Select all that apply — Vela will tailor its workbenches accordingly.</div>
+      <div class="ob-multi-hint">✓ Multi-select</div>
+      <div class="ob-lob-grid">
+        <div class="ob-lob" onclick="toggleLob(this,'life')">
+          <div class="ob-lob-icon">🏥</div>
+          <div class="ob-lob-name">Life Insurance</div>
+        </div>
+        <div class="ob-lob" onclick="toggleLob(this,'nonlife')">
+          <div class="ob-lob-icon">🏠</div>
+          <div class="ob-lob-name">Non-Life / P&C</div>
+        </div>
+        <div class="ob-lob" onclick="toggleLob(this,'health')">
+          <div class="ob-lob-icon">💊</div>
+          <div class="ob-lob-name">Health Insurance</div>
+        </div>
+        <div class="ob-lob" onclick="toggleLob(this,'reins')">
+          <div class="ob-lob-icon">🔄</div>
+          <div class="ob-lob-name">Reinsurance</div>
+        </div>
+        <div class="ob-lob" onclick="toggleLob(this,'general')">
+          <div class="ob-lob-icon">🌍</div>
+          <div class="ob-lob-name">General / Commercial</div>
+        </div>
+        <div class="ob-lob" onclick="toggleLob(this,'marine')">
+          <div class="ob-lob-icon">🚢</div>
+          <div class="ob-lob-name">Marine &amp; Aviation</div>
+        </div>
+      </div>
+      <button class="ob-btn" onclick="obNext(2)" id="btn2" disabled>Continue →</button>
+      <button class="ob-back" onclick="obBack(2)">← Back</button>
+    </div>
+
+    <!-- Step 3: Role -->
+    <div class="ob-step" id="step3">
+      <div class="ob-q">What is your primary role?</div>
+      <div class="ob-hint">Vela will personalise its default workbench and suggested queries.</div>
+      <div class="ob-opts" id="role-opts">
+        <div class="ob-opt" onclick="selectRole(this,'actuary')"><div class="ob-opt-icon">📐</div><div><div class="ob-opt-text">Actuary / Pricing</div><div class="ob-opt-sub">Reserving, pricing models, IFRS 17, capital</div></div></div>
+        <div class="ob-opt" onclick="selectRole(this,'uw')"><div class="ob-opt-icon">🛡️</div><div><div class="ob-opt-text">Underwriter</div><div class="ob-opt-sub">Risk assessment, policy terms, referral decisions</div></div></div>
+        <div class="ob-opt" onclick="selectRole(this,'claims')"><div class="ob-opt-icon">📋</div><div><div class="ob-opt-text">Claims / Loss Adjusting</div><div class="ob-opt-sub">FNOL, fraud, reserves, settlement</div></div></div>
+        <div class="ob-opt" onclick="selectRole(this,'compliance')"><div class="ob-opt-icon">⚖️</div><div><div class="ob-opt-text">Compliance / Legal</div><div class="ob-opt-sub">Regulatory, policy wording, litigation</div></div></div>
+        <div class="ob-opt" onclick="selectRole(this,'distribution')"><div class="ob-opt-icon">📢</div><div><div class="ob-opt-text">Distribution / Marketing</div><div class="ob-opt-sub">Campaigns, agent analytics, product launch</div></div></div>
+        <div class="ob-opt" onclick="selectRole(this,'exec')"><div class="ob-opt-icon">📊</div><div><div class="ob-opt-text">Executive / Finance</div><div class="ob-opt-sub">Portfolio analytics, reporting, board packs</div></div></div>
+      </div>
+      <button class="ob-btn" onclick="launchApp()" id="btn3" disabled>Start using Vela →</button>
+      <button class="ob-back" onclick="obBack(3)">← Back</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     MAIN APP
+════════════════════════════════════════ -->
+<div id="app">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="brand" onclick="goHome()">Vel<span>a</span></div>
+    <div class="mode-bar">
+      <button class="mode-btn active" onclick="setMode('simple',this)">Simple</button>
+      <button class="mode-btn" onclick="setMode('advanced',this)">Advanced Thinking</button>
+      <button class="mode-btn" onclick="setMode('expert',this)">Expert · Quant</button>
+    </div>
+    <div class="tb-right">
+      <div class="ctx-badge" id="ctx-badge" onclick="openSettings()" title="Click to change region or LOB">🇮🇳 India · Life + Non-Life</div>
+      <div class="sub-badge">Pro</div>
+      <div class="avatar" id="top-avatar" onclick="openSettings()">✦</div>
+    </div>
+  </div>
+
+  <div class="layout">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar" id="sidebar">
+      <button class="sb-toggle" onclick="toggleSB()" title="Expand sidebar">☰</button>
+      <div class="sb-sep"></div>
+
+      <div class="sb-sect">Workbenches</div>
+      <button class="nav-btn" onclick="openP('actuarial')"><span class="ni">📐</span><span class="nl">Actuarial</span><div class="ttip"><strong>Actuarial Workbench</strong><br>Pricing (GLM/GBM) · IBNR reserving<br>R &amp; Python library · Experience analysis<br>Mortality · Stochastic modelling</div></button>
+      <button class="nav-btn" onclick="openP('uw')"><span class="ni">🛡️</span><span class="nl">Underwriting</span><div class="ttip"><strong>Underwriting Desk</strong><br>AI risk scoring · Instant decisions<br>Referral routing · Bind authority checks<br>Telematics · Cyber risk</div></button>
+      <button class="nav-btn" onclick="openP('claims')"><span class="ni">📋</span><span class="nl">Claims</span><div class="ttip"><strong>Claims Intelligence</strong><br>FNOL · Fraud detection · Reserve AI<br>Medical report analysis · Coverage check<br>Settlement calculator · SIU routing</div></button>
+      <button class="nav-btn" onclick="openP('reins')"><span class="ni">🔄</span><span class="nl">Reinsurance</span><div class="ttip"><strong>Reinsurance Hub</strong><br>Treaty management · Bordereau OCR<br>Cession optimisation · Cat accumulation<br>Slip drafting · Fac certificates</div></button>
+      <button class="nav-btn" onclick="openP('finance')"><span class="ni">📑</span><span class="nl">Finance</span><div class="ttip"><strong>Finance &amp; IFRS 17</strong><br>CSM · BBA/PAA · Solvency II SCR<br>Statutory returns · Board pack generator<br>Embedded value · Investment income</div></button>
+
+      <div class="sb-sep"></div>
+      <div class="sb-sect">Hubs</div>
+      <button class="nav-btn" onclick="openP('compliance')"><span class="ni">⚖️</span><span class="nl">Compliance</span><div class="ttip"><strong>Compliance Hub</strong><br>Live regulatory reference by country<br>IRDAI · FCA · NAIC · BaFin · MAS · SAMA<br>Filing calendar · Gap analysis · Circular digest</div></button>
+      <button class="nav-btn" onclick="openP('legal')"><span class="ni">🏛️</span><span class="nl">Legal</span><div class="ttip"><strong>Legal Hub</strong><br>Insurance case law · 180K+ cases indexed<br>Precedent finder for litigation strategy<br>Policy wording disputes · Arbitration awards</div></button>
+      <button class="nav-btn" onclick="openP('dist')"><span class="ni">📢</span><span class="nl">Distribution</span><div class="ttip"><strong>Distribution Hub</strong><br>Campaign builder with AI copy<br>Reward &amp; incentive simulation<br>Predictive retention model · Agent analytics<br>Cross-sell engine · Channel ROI</div></button>
+      <button class="nav-btn" onclick="openP('products')"><span class="ni">🏷️</span><span class="nl">Products</span><div class="ttip"><strong>Products Lab</strong><br>Product design wizard · Rate filing drafts<br>Benefit illustrations · Parametric products<br>Competitor benchmarking</div></button>
+
+      <div class="sb-sep"></div>
+      <div class="sb-sect">Tools</div>
+      <button class="nav-btn" onclick="openP('docs')"><span class="ni">📂</span><span class="nl">Documents</span><div class="ttip"><strong>Document Studio</strong><br>OCR any insurance document<br>Policy wording extractor · Bordereau parser<br>Medical reports · Claims docs</div></button>
+      <button class="nav-btn" onclick="openP('analytics')"><span class="ni">📈</span><span class="nl">Analytics</span><div class="ttip"><strong>Portfolio Analytics</strong><br>GWP · Loss ratios · Segment P&amp;L<br>Agent league table · Customer CLV<br>Channel performance</div></button>
+    </div>
+
+    <!-- MAIN CHAT -->
+    <div class="main">
+      <div class="chat-area" id="chat-area">
+        <div class="chat-inner" id="chat-inner">
+          <div class="welcome" id="welcome">
+            <div class="wlc-logo">Vel<span>a</span></div>
+            <div class="wlc-sub" id="wlc-sub">How can I help you today?</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="input-area">
+        <div class="input-wrap">
+          <div class="input-box-row">
+            <textarea class="input-box" id="chat-input" rows="1" placeholder="Ask anything — research, pricing models, compliance, legal, campaigns, reports, create content…" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+            <button class="send-btn" id="send-btn" onclick="sendMsg()">▶</button>
+          </div>
+          <div class="input-footer">
+            <div class="footer-left">
+              <button class="attach-btn" title="Attach document">📎</button>
+              <span class="mode-hint" id="mode-hint">Simple · fast answers</span>
+            </div>
+            <div class="footer-right">Vela may make errors on critical decisions — always verify.</div>
+          </div>
+        </div>
+      </div>
+    </div><!-- /main -->
+
+    <!-- ════════════════════════════════════════
+         PANEL OVERLAYS
+    ════════════════════════════════════════ -->
+
+    <!-- ACTUARIAL -->
+    <div class="panel" id="panel-actuarial">
+      <div class="ph"><div><div class="ph-title">📐 Actuarial Workbench</div><div class="ph-sub">Pricing · Reserving · R/Python library · Experience</div></div><div class="ph-right"><button class="close-btn" onclick="closeP('actuarial')">✕</button></div></div>
+      <div class="lob-bar">
+        <span class="lob-label">LOB:</span>
+        <button class="lob-btn active" onclick="setLOB(this)">All</button>
+        <button class="lob-btn" onclick="setLOB(this)">Life</button>
+        <button class="lob-btn" onclick="setLOB(this)">Non-Life / P&C</button>
+        <button class="lob-btn" onclick="setLOB(this)">Health</button>
+        <button class="lob-btn" onclick="setLOB(this)">Reinsurance</button>
+        <button class="lob-btn" onclick="setLOB(this)">Marine</button>
+      </div>
+      <div class="ptabs">
+        <button class="ptab active" onclick="swTab('actuarial','pricing',this)">Pricing Models</button>
+        <button class="ptab" onclick="swTab('actuarial','reserving',this)">Reserving / IBNR</button>
+        <button class="ptab" onclick="swTab('actuarial','experience',this)">Experience</button>
+        <button class="ptab" onclick="swTab('actuarial','library',this)">R / Python Library</button>
+      </div>
+      <div class="pbody">
+        <div id="actuarial-pricing">
+          <div class="p-label">Model Selection</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px">
+            <div class="pcard" style="border-color:#7c5cfc;background:#faf9ff"><div class="pcard-title">GLM Pricing</div><div class="pcard-desc">Poisson freq × Gamma sev. Industry standard. Full regulatory audit trail.</div></div>
+            <div class="pcard"><div class="pcard-title">GBM / XGBoost</div><div class="pcard-desc">Non-linear interactions. Higher Gini, harder to file. SHAP explanations.</div></div>
+            <div class="pcard"><div class="pcard-title">Elastic Net GLM</div><div class="pcard-desc">Lasso/Ridge regularisation for high-dimensional factor selection.</div></div>
+          </div>
+          <div class="p-label">GLM Motor Pricing — R (generated by Vela · Expert mode)</div>
+          <div class="code-blk"><button class="copy-btn" onclick="cpCode(this)">Copy</button>
+<span class="kw">library</span>(<span class="st">vela</span>)          <span class="cm"># Vela actuarial R package</span>
+<span class="kw">library</span>(<span class="st">insuranceRating</span>)
+<span class="kw">library</span>(<span class="st">tidyverse</span>)
+
+<span class="cm"># ── 1. Load portfolio data ──────────────────────────</span>
+df <span class="op">&lt;-</span> <span class="fn">vela_load</span>(<span class="st">"motor_exposure"</span>, ay = <span class="nm">2019</span>:<span class="nm">2024</span>) <span class="op">|&gt;</span>
+  <span class="fn">mutate</span>(
+    age_band  = <span class="fn">cut</span>(driver_age, <span class="fn">c</span>(<span class="nm">17</span>,<span class="nm">25</span>,<span class="nm">35</span>,<span class="nm">45</span>,<span class="nm">60</span>,<span class="nm">Inf</span>), right=<span class="kw">FALSE</span>),
+    cc_band   = <span class="fn">cut</span>(engine_cc,  <span class="fn">c</span>(<span class="nm">0</span>,<span class="nm">1000</span>,<span class="nm">1600</span>,<span class="nm">2000</span>,<span class="nm">Inf</span>)),
+    ncb       = <span class="fn">factor</span>(ncb_yrs, levels=<span class="nm">0</span>:<span class="nm">5</span>),
+    log_si    = <span class="fn">log</span>(sum_insured)
+  )
+
+<span class="cm"># ── 2. Frequency model (Poisson GLM) ────────────────</span>
+m_freq <span class="op">&lt;-</span> <span class="fn">glm</span>(
+  claims <span class="op">~</span> age_band + cc_band + ncb + zone + vehicle_use + log_si,
+  family = <span class="fn">poisson</span>(<span class="st">"log"</span>),  offset = <span class="fn">log</span>(exposure),  data = df
+)
+
+<span class="cm"># ── 3. Severity model (Gamma GLM) ───────────────────</span>
+m_sev <span class="op">&lt;-</span> <span class="fn">glm</span>(
+  avg_loss <span class="op">~</span> age_band + cc_band + zone + repair_type,
+  family = <span class="fn">Gamma</span>(<span class="st">"log"</span>),  data = <span class="fn">filter</span>(df, claims > <span class="nm">0</span>)
+)
+
+<span class="cm"># ── 4. Pure premium = Freq × Sev ────────────────────</span>
+df$pp <span class="op">&lt;-</span> <span class="fn">predict</span>(m_freq, df, type=<span class="st">"response"</span>) <span class="op">*</span>
+          <span class="fn">predict</span>(m_sev,  df, type=<span class="st">"response"</span>)
+
+<span class="cm"># ── 5. Validate: Gini, lift curve, one-way plots ────</span>
+<span class="fn">vela_gini</span>(df$pp, df$actual_loss_cost)   <span class="cm"># target: 0.40–0.55</span>
+<span class="fn">vela_lift</span>(m_freq, df, bands=<span class="nm">10</span>)
+<span class="fn">vela_oneway</span>(m_freq, <span class="st">"age_band"</span>, df)    <span class="cm"># marginal factor plot</span>
+
+<span class="cm"># ── 6. UBI telematics overlay (optional) ────────────</span>
+<span class="cm"># Add telematics score as offset — no model re-fit needed</span>
+df$pp_ubi <span class="op">&lt;-</span> df$pp <span class="op">*</span> <span class="fn">exp</span>(df$tele_score_offset)</div>
+          <div class="res-box"><strong>Vela commentary:</strong> For a personal motor book, Gini coefficients of 0.40–0.55 indicate a well-fitted model. Driver age and NCB typically explain ~18% and ~14% of deviance. Add <code>vela_rate_change()</code> to audit rate movement between model vintages. Use <code>vela_file_glm()</code> to auto-generate a rate filing narrative for IRDAI / FCA / NAIC submission.</div>
+        </div>
+        <div id="actuarial-reserving" style="display:none">
+          <div class="kpi-row">
+            <div class="kpi"><div class="kpi-val">$50.8M</div><div class="kpi-label">Total IBNR</div><div class="kpi-delta wn">⚠ AY23-24 uncertain</div></div>
+            <div class="kpi"><div class="kpi-val">72%</div><div class="kpi-label">ELR Selected</div><div class="kpi-delta up">▲+2pp vs prior</div></div>
+            <div class="kpi"><div class="kpi-val">P50: $50.8M</div><div class="kpi-label">Bootstrap median</div><div class="kpi-delta">P95: $65.1M</div></div>
+          </div>
+          <table class="tbl">
+            <tr><th>AY</th><th>Reported</th><th>LDF</th><th>Ultimate</th><th>IBNR</th><th>Method</th><th>90% CI</th></tr>
+            <tr><td>2019</td><td>$48.2M</td><td>1.003</td><td>$48.3M</td><td>$0.1M</td><td><span class="tag tag-b">CL</span></td><td>±$0.1M</td></tr>
+            <tr><td>2020</td><td>$52.1M</td><td>1.012</td><td>$52.7M</td><td>$0.6M</td><td><span class="tag tag-b">CL</span></td><td>±$0.3M</td></tr>
+            <tr><td>2021</td><td>$61.8M</td><td>1.045</td><td>$64.6M</td><td>$2.8M</td><td><span class="tag tag-g">BF</span></td><td>±$0.9M</td></tr>
+            <tr><td>2022</td><td>$59.4M</td><td>1.120</td><td>$66.5M</td><td>$7.1M</td><td><span class="tag tag-g">BF</span></td><td>±$2.1M</td></tr>
+            <tr><td>2023</td><td>$44.3M</td><td>1.380</td><td>$61.1M</td><td>$16.8M</td><td><span class="tag tag-o">CC</span></td><td>±$5.4M</td></tr>
+            <tr><td>2024</td><td>$18.6M</td><td>2.250</td><td>$41.9M</td><td>$23.3M</td><td><span class="tag tag-o">CC</span></td><td>±$9.2M</td></tr>
+          </table>
+          <div class="alert" style="margin-top:12px">Bootstrap (ODP, 1,000 sims): P25 $44.1M · P50 $50.8M · P75 $57.6M · P95 $65.1M. Consider $4–6M prudence margin on AY2024.</div>
+        </div>
+        <div id="actuarial-experience" style="display:none">
+          <div class="res-box"><strong>A/E Commentary (Vela generated):</strong><br>Age 17–25: A/E ratio = 1.24 — actual frequency <strong>24% above model</strong>. Young driver loading of +45% may be insufficient; recommend re-rating to +58–62%.<br>Age 60+: A/E = 1.11 — mild adverse emergence, likely increased urban driving post-2022.<br>All other segments within ±5% — model remains well-calibrated overall.</div>
+        </div>
+        <div id="actuarial-library" style="display:none">
+          <div class="alert info">📦 <strong>vela</strong> R package + Python library — install once, get pricing, reserving, mortality, cat, IFRS 17, and validation tools bundled. Connects to Vela's API for cloud-enhanced computations.</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+            <div class="pcard"><div class="pcard-title">🔵 R</div><div class="code-blk" style="font-size:11px;margin-top:8px">install.packages(<span class="st">"vela"</span>)
+<span class="cm"># dev:</span> remotes::install_github(<span class="st">"vela-ai/vela-r"</span>)</div></div>
+            <div class="pcard"><div class="pcard-title">🟡 Python</div><div class="code-blk" style="font-size:11px;margin-top:8px">pip install vela-actuarial
+<span class="cm"># extras:</span> pip install vela[ml,ifrs17]</div></div>
+          </div>
+          <table class="tbl">
+            <tr><th>Module</th><th>Key Functions</th><th>Lang</th></tr>
+            <tr><td><code>vela.pricing</code></td><td>glm_freq, glm_sev, gbm_pp, oneway, gini, lift, rate_file</td><td>R+Py</td></tr>
+            <tr><td><code>vela.reserving</code></td><td>chainladder, bf, cape_cod, bootstrap, fan_chart, odp</td><td>R+Py</td></tr>
+            <tr><td><code>vela.mortality</code></td><td>cso_tables, improvement_scales, ae_mortality, stochastic_mort</td><td>R</td></tr>
+            <tr><td><code>vela.cat</code></td><td>ep_curve, oep_aep, accumulation, rms_parser, air_parser</td><td>Py</td></tr>
+            <tr><td><code>vela.ifrs17</code></td><td>csm_calc, ra_calc, bba_paa_test, lcr_movement, disc_rate</td><td>Py</td></tr>
+            <tr><td><code>vela.validate</code></td><td>gini, lorenz, back_test, residual_plot, deviance_table</td><td>R+Py</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMPLIANCE HUB -->
+    <div class="panel" id="panel-compliance">
+      <div class="ph"><div><div class="ph-title">⚖️ Compliance Hub</div><div class="ph-sub">Live regulatory reference · Filing calendar · Gap analysis</div></div><div class="ph-right"><button class="close-btn" onclick="closeP('compliance')">✕</button></div></div>
+      <div class="lob-bar">
+        <span class="lob-label">LOB:</span>
+        <button class="lob-btn active" onclick="setLOB(this)">All</button>
+        <button class="lob-btn" onclick="setLOB(this)">Life</button>
+        <button class="lob-btn" onclick="setLOB(this)">Non-Life</button>
+        <button class="lob-btn" onclick="setLOB(this)">Health</button>
+        <button class="lob-btn" onclick="setLOB(this)">Reinsurance</button>
+      </div>
+      <div class="ptabs">
+        <button class="ptab active" onclick="swTab('compliance','ref',this)">Regulatory Reference</button>
+        <button class="ptab" onclick="swTab('compliance','calendar',this)">Filing Calendar</button>
+        <button class="ptab" onclick="swTab('compliance','gap',this)">Gap Analysis</button>
+      </div>
+      <div class="pbody">
+        <div id="compliance-ref">
+          <div class="form-row" style="margin-bottom:14px">
+            <div class="fg"><label>Jurisdiction</label>
+              <select class="fc" id="comp-jur">
+                <option>🇮🇳 India — IRDAI</option><option>🇬🇧 UK — FCA / PRA</option><option>🇺🇸 USA — NAIC</option><option>🇩🇪 Germany — BaFin</option><option>🇸🇬 Singapore — MAS</option><option>🇦🇪 UAE — CBUAE</option><option>🌐 IAIS International</option>
+              </select>
+            </div>
+            <div class="fg"><label>Topic</label>
+              <select class="fc"><option>All Topics</option><option>Product Regulations</option><option>Solvency / Capital</option><option>Data Protection / GDPR</option><option>Distribution / Agents</option><option>IFRS / Accounting</option><option>Consumer Protection</option></select>
+            </div>
+          </div>
+          <div class="alert ok">🔄 Synced from IRDAI.gov.in · 4 Jun 2026 · 847 documents indexed</div>
+          <table class="tbl" style="margin-top:10px">
+            <tr><th>Ref</th><th>Subject</th><th>Date</th><th>Status</th></tr>
+            <tr><td><span class="tag tag-b">IRDAI/NL/2026/42</span></td><td>Motor TP premium rates revised w.e.f 1 Jul 2026</td><td>15 May</td><td><span class="pill pr">Urgent</span></td></tr>
+            <tr><td><span class="tag tag-b">IRDAI/Life/2026/38</span></td><td>ULIP expense cap — revised to 2.25% of fund value</td><td>2 Apr</td><td><span class="pill pg">Done</span></td></tr>
+            <tr><td><span class="tag tag-b">IRDAI/HLT/2026/31</span></td><td>Health — standardised exclusions (Bima Sugam)</td><td>18 Mar</td><td><span class="pill py">Review</span></td></tr>
+            <tr><td><span class="tag tag-b">IRDAI/ACTL/2025/88</span></td><td>Appointed Actuary — revised valuation basis, par policies</td><td>12 Nov</td><td><span class="pill pg">Done</span></td></tr>
+          </table>
+          <div class="divider"></div>
+          <div class="p-label">Ask a Regulatory Question</div>
+          <div style="display:flex;gap:8px">
+            <input class="fc" style="flex:1" id="comp-q" placeholder="e.g. What is the IRDAI limit on TPA charges for health claims?" onkeydown="if(event.key==='Enter')askComp()"/>
+            <button class="btn-p btn-sm" onclick="askComp()">Ask</button>
+          </div>
+          <div id="comp-ans" style="display:none" class="res-box" style="margin-top:10px"></div>
+        </div>
+        <div id="compliance-calendar" style="display:none">
+          <div class="kpi-row">
+            <div class="kpi"><div class="kpi-val wn">5</div><div class="kpi-label">Upcoming Filings</div><div class="kpi-delta wn">2 within 30 days</div></div>
+            <div class="kpi"><div class="kpi-val up">94%</div><div class="kpi-label">Compliance Score</div></div>
+            <div class="kpi"><div class="kpi-val">8</div><div class="kpi-label">Jurisdictions</div></div>
+          </div>
+          <table class="tbl">
+            <tr><th>Filing</th><th>Regulator</th><th>Due</th><th>Status</th></tr>
+            <tr><td>Motor TP rate update</td><td>IRDAI</td><td style="color:#dc2626;font-weight:700">30 Jun</td><td><span class="pill pr">Urgent</span></td></tr>
+            <tr><td>Annual Return L-01</td><td>IRDAI</td><td>31 Jul</td><td><span class="pill py">In Progress</span></td></tr>
+            <tr><td>Consumer Duty Board Report</td><td>FCA</td><td>31 Jul</td><td><span class="pill py">In Progress</span></td></tr>
+            <tr><td>RBC Submission Q2</td><td>NAIC</td><td>15 Aug</td><td><span class="pill pb">Not started</span></td></tr>
+          </table>
+        </div>
+        <div id="compliance-gap" style="display:none">
+          <div class="alert">Gap analysis compares your uploaded policy wordings and procedures against current regulatory requirements.</div>
+          <table class="tbl" style="margin-top:12px">
+            <tr><th>Requirement</th><th>Status</th><th>Gap</th><th>Priority</th></tr>
+            <tr><td>TP premium rates updated</td><td><span class="pill pr">Open</span></td><td>Not updated in policy admin</td><td><span class="pill pr">Critical</span></td></tr>
+            <tr><td>24hr claim intimation SLA</td><td><span class="pill pg">Compliant</span></td><td>—</td><td>—</td></tr>
+            <tr><td>Digital KYC linkage</td><td><span class="pill py">Partial</span></td><td>12% of policies not linked</td><td><span class="pill py">Medium</span></td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- LEGAL HUB -->
+    <div class="panel" id="panel-legal">
+      <div class="ph"><div><div class="ph-title">🏛️ Legal Hub</div><div class="ph-sub">Insurance case law · Precedent finder · 180K+ cases indexed</div></div><div class="ph-right"><button class="close-btn" onclick="closeP('legal')">✕</button></div></div>
+      <div class="lob-bar">
+        <span class="lob-label">LOB:</span>
+        <button class="lob-btn active" onclick="setLOB(this)">All</button>
+        <button class="lob-btn" onclick="setLOB(this)">Life</button>
+        <button class="lob-btn" onclick="setLOB(this)">Property / P&C</button>
+        <button class="lob-btn" onclick="setLOB(this)">Health</button>
+        <button class="lob-btn" onclick="setLOB(this)">Marine</button>
+        <button class="lob-btn" onclick="setLOB(this)">Liability</button>
+      </div>
+      <div class="ptabs">
+        <button class="ptab active" onclick="swTab('legal','search',this)">Case Search</button>
+        <button class="ptab" onclick="swTab('legal','strategy',this)">Litigation Strategy</button>
+        <button class="ptab" onclick="swTab('legal','wording',this)">Wording Disputes</button>
+      </div>
+      <div class="pbody">
+        <div id="legal-search">
+          <div style="display:flex;gap:8px;margin-bottom:14px">
+            <input class="fc" style="flex:1" placeholder="Search case law… e.g. 'non-disclosure material facts property'" id="legal-q" onkeydown="if(event.key==='Enter')doLegal()"/>
+            <select class="fc" style="width:130px"><option>All Juris.</option><option>India SC</option><option>India NCDRC</option><option>UK High Court</option><option>UK CoA</option><option>US Federal</option><option>Lloyd's Arb.</option></select>
+            <button class="btn-p btn-sm" onclick="doLegal()">Search</button>
+          </div>
+          <div class="p-label">Key Precedents — Non-Disclosure / Material Facts</div>
+          <div class="pcard">
+            <div style="display:flex;justify-content:space-between"><div class="pcard-title">Pan Atlantic v Pine Top [1994] UKHL 8</div><span class="pill pg">Insurer won</span></div>
+            <div class="pcard-desc" style="margin:6px 0">House of Lords: insurer must prove non-disclosed fact <em>induced</em> them to write the risk — not merely that it was material. Establishes the inducement test still used today.</div>
+            <div><span class="tag tag-b">Non-disclosure</span><span class="tag tag-b">Inducement</span><span class="tag tag-b">Reinsurance</span></div>
+            <div style="font-size:11px;color:#7c5cfc;margin-top:7px;cursor:pointer">▶ Full summary · Litigation strategy · Distinguishable facts</div>
+          </div>
+          <div class="pcard">
+            <div style="display:flex;justify-content:space-between"><div class="pcard-title">Versloot Dredging v HDI Gerling [2016] UKSC 45</div><span class="tag tag-o">Mixed</span></div>
+            <div class="pcard-desc" style="margin:6px 0">Supreme Court abolished fraudulent device rule. A fraudulent statement that doesn't affect claim outcome does NOT forfeit the entire claim — major shift for fraud defence strategy.</div>
+            <div><span class="tag tag-b">Fraud</span><span class="tag tag-b">Marine</span><span class="tag tag-b">Proportionality</span></div>
+          </div>
+          <div class="pcard">
+            <div style="display:flex;justify-content:space-between"><div class="pcard-title">LIC of India v Asha Goel (2001) — Supreme Court of India</div><span class="pill py">Policyholder won</span></div>
+            <div class="pcard-desc" style="margin:6px 0">Repudiation under Section 45 requires nexus between suppressed fact and cause of claim. Mere suppression without causal link insufficient to repudiate a life claim after 2 years.</div>
+            <div><span class="tag tag-b">Life · India</span><span class="tag tag-b">Section 45</span><span class="tag tag-b">Repudiation</span></div>
+          </div>
+        </div>
+        <div id="legal-strategy" style="display:none">
+          <div class="p-label">Build a Litigation Strategy</div>
+          <div class="form-row">
+            <div class="fg"><label>Your Position</label><select class="fc"><option>Insurer defending</option><option>Insurer seeking recovery</option><option>Policyholder / claimant</option><option>Reinsurer</option></select></div>
+            <div class="fg"><label>Line of Business</label><select class="fc"><option>Property</option><option>Motor</option><option>Marine</option><option>Life / PA</option><option>Liability</option><option>Health</option></select></div>
+          </div>
+          <div class="fg" style="margin-bottom:12px"><label>Describe the Dispute</label><textarea class="fc" rows="4" placeholder="e.g. Policyholder claims flood damage. Policy excludes damage from surface water ingress through defective drainage. We wish to rely on this exclusion…"></textarea></div>
+          <button class="btn-p" style="width:100%" onclick="alert('Vela searches 180,000+ cases, identifies analogous precedents, and produces a litigation strategy memo with strongest supporting cases, distinguishable facts, and risk-weighted settlement advice.')">Find Precedents &amp; Draft Strategy Memo</button>
+          <div class="alert info" style="margin-top:12px">🏛️ Archive covers: UK 1850–present · India SC + NCDRC 1950–present · US Federal · Lloyd's arbitration · ICC · Singapore CoA · UAE DIFC courts. Updated monthly.</div>
+        </div>
+        <div id="legal-wording" style="display:none">
+          <div class="p-label">Policy Wording Dispute Analyser</div>
+          <div class="fg" style="margin-bottom:10px"><label>Disputed Clause</label><textarea class="fc" rows="3" placeholder="Paste the exact clause being disputed…"></textarea></div>
+          <div class="fg" style="margin-bottom:12px"><label>Dispute Facts</label><textarea class="fc" rows="3" placeholder="Describe the claim scenario and why the clause is disputed…"></textarea></div>
+          <button class="btn-p" style="width:100%">Analyse Clause History</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DISTRIBUTION HUB -->
+    <div class="panel" id="panel-dist">
+      <div class="ph"><div><div class="ph-title">📢 Distribution Hub</div><div class="ph-sub">Campaigns · Reward simulation · Channel analytics · Cross-sell</div></div><div class="ph-right"><button class="close-btn" onclick="closeP('dist')">✕</button></div></div>
+      <div class="lob-bar">
+        <span class="lob-label">LOB:</span>
+        <button class="lob-btn active" onclick="setLOB(this)">All</button>
+        <button class="lob-btn" onclick="setLOB(this)">Life</button>
+        <button class="lob-btn" onclick="setLOB(this)">Motor</button>
+        <button class="lob-btn" onclick="setLOB(this)">Health</button>
+        <button class="lob-btn" onclick="setLOB(this)">Property</button>
+        <button class="lob-btn" onclick="setLOB(this)">SME</button>
+      </div>
+      <div class="ptabs">
+        <button class="ptab active" onclick="swTab('dist','campaign',this)">Campaign Builder</button>
+        <button class="ptab" onclick="swTab('dist','sim',this)">Reward Simulation</button>
+        <button class="ptab" onclick="swTab('dist','channels',this)">Channel Analytics</button>
+      </div>
+      <div class="pbody">
+        <div id="dist-campaign">
+          <div class="form-row">
+            <div class="fg"><label>Product Line</label><select class="fc"><option>Motor Renewal</option><option>Health Renewal</option><option>Life Cross-sell</option><option>Home Insurance</option><option>SME Package</option></select></div>
+            <div class="fg"><label>Campaign Type</label><select class="fc"><option>Renewal Retention</option><option>Cross-sell / Upsell</option><option>New Business</option><option>Winback (Lapsed)</option></select></div>
+          </div>
+          <div class="form-row">
+            <div class="fg"><label>Target Segment</label><select class="fc"><option>High-Value Low-Risk</option><option>Mid-Value Standard</option><option>Price Sensitive / Lapse Risk</option><option>All Active</option></select></div>
+            <div class="fg"><label>Reward Structure</label><select class="fc"><option>NCB Accelerator</option><option>Premium Discount 5–15%</option><option>Loyalty Points</option><option>Free Add-on Cover</option><option>No Incentive</option></select></div>
+          </div>
+          <button class="btn-p" style="width:100%;margin-bottom:14px" onclick="genCampaign()">Generate Campaign Plan</button>
+          <div id="dist-camp-out" style="display:none">
+            <div class="p-label">AI Campaign Plan — Motor Renewal · High-Value Segment</div>
+            <div class="res-box">
+              <strong>Target:</strong> 48,200 policyholders due renewal in 90 days<br>
+              <strong>Week 1–2:</strong> Personalised email · A/B subject lines · Predicted open rate 38–44%<br>
+              <strong>Week 3:</strong> SMS + WhatsApp to non-openers · Agent call for SI &gt;₹10L<br>
+              <strong>Week 5:</strong> NCB Accelerator unlock · +11% conversion uplift predicted<br>
+              <strong>ROI:</strong> Campaign cost ₹28L → incremental GWP retained ₹14.2Cr → <strong>50.7× ROI</strong>
+            </div>
+            <div style="margin-top:14px">
+              <div class="p-label">Week-by-Week Plan</div>
+              <table class="tbl">
+                <tr><th>Week</th><th>Channel</th><th>Message</th><th>Expected Response</th></tr>
+                <tr><td>1</td><td>Email</td><td>Personalised quote + NCB statement</td><td>Open 41% · Click 12%</td></tr>
+                <tr><td>2</td><td>Email (non-openers)</td><td>Rate lock expiry urgency</td><td>+22% incremental opens</td></tr>
+                <tr><td>3</td><td>SMS + WhatsApp</td><td>Renewal portal link</td><td>CTR 18%</td></tr>
+                <tr><td>4</td><td>Agent call</td><td>High-SI customers</td><td>Conv. 74%</td></tr>
+                <tr><td>5–6</td><td>Email + Push</td><td>NCB Accelerator + final 48hr</td><td>Open 36%</td></tr>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div id="dist-sim" style="display:none">
+          <div class="p-label">Reward Structure Simulator</div>
+          <div class="alert info">Adjust discount level to simulate predicted retention uplift, cost, and net GWP using your portfolio's price elasticity model.</div>
+          <div class="form-row" style="margin-top:12px">
+            <div class="fg"><label>Discount / Incentive Level</label>
+              <input type="range" min="0" max="20" value="8" style="width:100%;accent-color:#7c5cfc;margin:10px 0" oninput="updateSim(this.value)" id="disc-sl"/>
+              <div style="display:flex;justify-content:space-between;font-size:11px;color:#bbb"><span>0%</span><span id="disc-v" style="font-weight:700;color:#7c5cfc">8%</span><span>20%</span></div>
+            </div>
+            <div class="fg"><label>Price Elasticity</label><select class="fc"><option>Low (−0.3)</option><option selected>Medium (−0.6)</option><option>High (−1.1)</option></select></div>
+          </div>
+          <div id="sim-out" class="res-box">
+            <strong>8% discount · Medium elasticity</strong><br>
+            Retention uplift: <strong>+4.8pp → 90.8%</strong> · Additional policies: ~2,314<br>
+            Discounted premium: ₹12,400 → ₹11,408 · Discount cost: <strong>₹2.1Cr</strong><br>
+            Net incremental GWP: <strong>₹10.8Cr</strong> <span style="color:#059669;font-weight:700">✓ ROI-positive</span>
+          </div>
+          <div class="p-label" style="margin-top:16px">Simulated Monthly Retained GWP</div>
+          <div id="sim-rows">
+            <div class="sim-row"><div class="sim-m">Jul 26</div><div class="sim-track"><div class="sim-fill" style="width:88%"></div></div><div class="sim-val">₹3.8Cr</div><div class="sim-d up">+4.8%</div></div>
+            <div class="sim-row"><div class="sim-m">Aug 26</div><div class="sim-track"><div class="sim-fill" style="width:84%"></div></div><div class="sim-val">₹3.6Cr</div><div class="sim-d up">+4.1%</div></div>
+            <div class="sim-row"><div class="sim-m">Sep 26</div><div class="sim-track"><div class="sim-fill" style="width:92%"></div></div><div class="sim-val">₹4.1Cr</div><div class="sim-d up">+5.3%</div></div>
+            <div class="sim-row"><div class="sim-m">Oct 26</div><div class="sim-track"><div class="sim-fill" style="width:89%"></div></div><div class="sim-val">₹3.9Cr</div><div class="sim-d up">+4.6%</div></div>
+            <div class="sim-row"><div class="sim-m">Nov 26</div><div class="sim-track"><div class="sim-fill" style="width:95%"></div></div><div class="sim-val">₹4.5Cr</div><div class="sim-d up">+5.9%</div></div>
+            <div class="sim-row"><div class="sim-m">Dec 26</div><div class="sim-track"><div class="sim-fill" style="width:97%"></div></div><div class="sim-val">₹4.7Cr</div><div class="sim-d up">+6.4%</div></div>
+          </div>
+        </div>
+        <div id="dist-channels" style="display:none">
+          <div class="kpi-row">
+            <div class="kpi"><div class="kpi-val">1,420</div><div class="kpi-label">Active Agents</div><div class="kpi-delta up">▲8% YoY</div></div>
+            <div class="kpi"><div class="kpi-val">88.2%</div><div class="kpi-label">Retention Rate</div><div class="kpi-delta up">▲1.4pp</div></div>
+            <div class="kpi"><div class="kpi-val">$3,240</div><div class="kpi-label">Avg CLV</div></div>
+          </div>
+          <table class="tbl">
+            <tr><th>Channel</th><th>GWP</th><th>Retention</th><th>CAC</th><th>Action</th></tr>
+            <tr><td>Direct / Digital</td><td>$48.2M</td><td>91%</td><td>$38</td><td><span class="pill pg">Invest more</span></td></tr>
+            <tr><td>Tied Agents</td><td>$112.4M</td><td>86%</td><td>$124</td><td><span class="pill py">Optimise</span></td></tr>
+            <tr><td>Brokers</td><td>$86.1M</td><td>79%</td><td>$210</td><td><span class="pill py">Review</span></td></tr>
+            <tr><td>Bancassurance</td><td>$54.8M</td><td>88%</td><td>$62</td><td><span class="pill pg">Grow</span></td></tr>
+          </table>
+          <div class="res-box" style="margin-top:12px"><strong>Vela:</strong> Digital direct has the best unit economics (91% retention at $38 CAC). Recommend shifting 15% of agent marketing budget to digital. Bancassurance is underrated — deepen bank API integrations.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OTHER PANELS (slim) -->
+    <div class="panel" id="panel-uw">
+      <div class="ph"><div><div class="ph-title">🛡️ Underwriting Desk</div><div class="ph-sub">AI risk scoring · Decision support · Referral routing</div></div><div class="ph-right"><button class="close-btn" onclick="closeP('uw')">✕</button></div></div>
+      <div class="lob-bar"><span class="lob-label">LOB:</span><button class="lob-btn active" onclick="setLOB(this)">All</button><button class="lob-btn" onclick="setLOB(this)">Life</button><button class="lob-btn" onclick="setLOB(this)">Property</button><button class="lob-btn" onclick="setLOB(this)">Motor</button><button class="lob-btn" onclick="setLOB(this)">Health</button><button class="lob-btn" onclick="setLOB(this)">Marine</button><button class="lob-btn" onclick="setLOB(this)">Cyber</button></div>
+      <div class="pbody">
+        <div class="form-row"><div class="fg"><label>Line of Business</label><select class="fc"><option>Commercial Property</option><option>Motor Fleet</option><option>Marine</option><option>Cyber</option><option>Liability</option></select></div><div class="fg"><label>Sum Insured</label><input class="fc" value="$25.5M"/></div></div>
+        <div class="form-row"><div class="fg"><label>Insured</label><input class="fc" value="Apex Manufacturing Ltd"/></div><div class="fg"><label>Location / Zone</label><input class="fc" value="Mumbai, Flood Zone 2"/></div></div>
+        <div class="form-row"><div class="fg"><label>Construction</label><select class="fc"><option>Reinforced Concrete</option><option>Steel Frame</option></select></div><div class="fg"><label>Fire Protection</label><select class="fc"><option>Sprinklered (Full)</option><option>Partial</option></select></div></div>
+        <div class="fg" style="margin-bottom:12px"><label>Loss History</label><input class="fc" value="2 losses · $180K total · 5 years"/></div>
+        <button class="btn-p" style="width:100%" onclick="showUW()">▶ Run AI Risk Assessment</button>
+        <div id="uw-out" style="display:none;margin-top:16px">
+          <div class="divider"></div>
+          <div class="flex-row">
+            <div class="score-ring" style="border:4px solid #059669;color:#059669">72</div>
+            <div><div style="font-size:12px;color:#bbb">Risk Score / 100</div><div style="font-size:17px;font-weight:700;color:#059669;margin:4px 0">✅ Accept — Standard Terms</div><div style="font-size:12px;color:#555">Rate load: +4.5% · Max line: $20M — refer excess to fac</div></div>
+          </div>
+          <table class="tbl" style="margin-top:14px">
+            <tr><th>Factor</th><th>Impact</th><th>Note</th></tr>
+            <tr><td>RC Construction</td><td><span class="pill pg">+8</span></td><td>Best class</td></tr>
+            <tr><td>Full Sprinkler</td><td><span class="pill pg">+6</span></td><td>Certified</td></tr>
+            <tr><td>Flood Zone 2</td><td><span class="pill py">−4</span></td><td>Moderate exposure</td></tr>
+            <tr><td>2 losses/5yr</td><td><span class="pill pr">−8</span></td><td>Above avg frequency</td></tr>
+          </table>
+          <div class="res-box" style="margin-top:10px"><strong>Vela:</strong> Bind at +4.5% technical rate. Fire survey warranty within 90 days. Aggregate deductible $50K per loss. Re-survey trigger: any claim &gt;$100K.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-claims">
+      <div class="ph"><div><div class="ph-title">📋 Claims Intelligence</div></div><div class="ph-right"><button class="close-btn" onclick="closeP('claims')">✕</button></div></div>
+      <div class="lob-bar"><span class="lob-label">LOB:</span><button class="lob-btn active" onclick="setLOB(this)">All</button><button class="lob-btn" onclick="setLOB(this)">Motor</button><button class="lob-btn" onclick="setLOB(this)">Property</button><button class="lob-btn" onclick="setLOB(this)">Health</button><button class="lob-btn" onclick="setLOB(this)">Life / PA</button><button class="lob-btn" onclick="setLOB(this)">Marine</button></div>
+      <div class="pbody">
+        <div class="kpi-row"><div class="kpi"><div class="kpi-val">2,847</div><div class="kpi-label">Open Claims</div></div><div class="kpi"><div class="kpi-val" style="color:#dc2626">127</div><div class="kpi-label">High Fraud Risk</div></div><div class="kpi"><div class="kpi-val wn">8.3%</div><div class="kpi-label">SLA Breach</div></div></div>
+        <table class="tbl">
+          <tr><th>Claim</th><th>Type</th><th>Amount</th><th>Fraud</th><th>Status</th></tr>
+          <tr><td>CLM-18742</td><td>Motor</td><td>$12.4K</td><td><span class="pill pr">HIGH 78</span></td><td><span class="pill pr">SIU</span></td></tr>
+          <tr><td>CLM-18741</td><td>Property</td><td>$280K</td><td><span class="pill pg">LOW 12</span></td><td><span class="pill py">Surveyor</span></td></tr>
+          <tr><td>CLM-18740</td><td>Health</td><td>$8.2K</td><td><span class="pill py">MED 44</span></td><td><span class="pill pb">Review</span></td></tr>
+          <tr><td>CLM-18739</td><td>Marine</td><td>$145K</td><td><span class="pill pg">LOW 8</span></td><td><span class="pill pg">Auto-settle</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-reins"><div class="ph"><div><div class="ph-title">🔄 Reinsurance Hub</div></div><div class="ph-right"><button class="close-btn" onclick="closeP('reins')">✕</button></div></div><div class="lob-bar"><span class="lob-label">LOB:</span><button class="lob-btn active" onclick="setLOB(this)">All</button><button class="lob-btn" onclick="setLOB(this)">Proportional</button><button class="lob-btn" onclick="setLOB(this)">Non-Proportional</button><button class="lob-btn" onclick="setLOB(this)">Facultative</button><button class="lob-btn" onclick="setLOB(this)">Cat / Retro</button></div><div class="pbody"><div class="kpi-row"><div class="kpi"><div class="kpi-val">14</div><div class="kpi-label">Active Treaties</div></div><div class="kpi"><div class="kpi-val">$180M</div><div class="kpi-label">Ceded Premium YTD</div></div><div class="kpi"><div class="kpi-val wn">78%</div><div class="kpi-label">Cat Accumulation</div></div></div><table class="tbl"><tr><th>Treaty</th><th>Type</th><th>Reinsurer</th><th>Status</th></tr><tr><td>Property QS 2024</td><td>QS 30%</td><td>Munich Re</td><td><span class="pill pg">Active</span></td></tr><tr><td>Cat XL L1</td><td>$50M xs $20M</td><td>Lloyd's 510</td><td><span class="pill pg">Active</span></td></tr><tr><td>Casualty XL</td><td>$15M xs $5M</td><td>Everest Re</td><td><span class="pill py">Renewing</span></td></tr></table></div></div>
+    <div class="panel" id="panel-finance"><div class="ph"><div><div class="ph-title">📑 Finance &amp; IFRS 17</div></div><div class="ph-right"><button class="close-btn" onclick="closeP('finance')">✕</button></div></div><div class="lob-bar"><span class="lob-label">LOB:</span><button class="lob-btn active" onclick="setLOB(this)">All</button><button class="lob-btn" onclick="setLOB(this)">Life (BBA)</button><button class="lob-btn" onclick="setLOB(this)">Non-Life (PAA)</button><button class="lob-btn" onclick="setLOB(this)">Health</button><button class="lob-btn" onclick="setLOB(this)">Reinsurance Held</button></div><div class="pbody"><div class="kpi-row"><div class="kpi"><div class="kpi-val">$842M</div><div class="kpi-label">CSM Balance</div><div class="kpi-delta up">▲$47M QoQ</div></div><div class="kpi"><div class="kpi-val">182%</div><div class="kpi-label">Solvency Coverage</div></div><div class="kpi"><div class="kpi-val">$380M</div><div class="kpi-label">Insurance Revenue</div><div class="kpi-delta up">▲4.1%</div></div></div><div style="display:flex;gap:8px"><input class="fc" style="flex:1" id="ifrs-q" placeholder="Ask any IFRS 17 / Solvency II question…" onkeydown="if(event.key==='Enter')askIFRS()"/><button class="btn-p btn-sm" onclick="askIFRS()">Ask</button></div><div id="ifrs-a" style="display:none" class="res-box" style="margin-top:10px"></div></div></div>
+    <div class="panel" id="panel-products"><div class="ph"><div><div class="ph-title">🏷️ Products Lab</div></div><div class="ph-right"><button class="close-btn" onclick="closeP('products')">✕</button></div></div><div class="lob-bar"><span class="lob-label">LOB:</span><button class="lob-btn active" onclick="setLOB(this)">All</button><button class="lob-btn" onclick="setLOB(this)">Life</button><button class="lob-btn" onclick="setLOB(this)">Non-Life</button><button class="lob-btn" onclick="setLOB(this)">Health</button><button class="lob-btn" onclick="setLOB(this)">Parametric</button></div><div class="pbody"><table class="tbl"><tr><th>Product</th><th>Stage</th><th>Due</th><th>Status</th></tr><tr><td>CyberGuard SME v2</td><td>Rate Filing</td><td>15 Jun</td><td><span class="pill py">In Progress</span></td></tr><tr><td>HealthFirst CI</td><td>Design</td><td>1 Sep</td><td><span class="pill pb">Design</span></td></tr><tr><td>FleetPro Telematics</td><td>Live</td><td>—</td><td><span class="pill pg">Live</span></td></tr></table></div></div>
+    <div class="panel" id="panel-docs"><div class="ph"><div><div class="ph-title">📂 Document Studio</div></div><div class="ph-right"><button class="close-btn" onclick="closeP('docs')">✕</button></div></div><div class="lob-bar"><span class="lob-label">Document type:</span><button class="lob-btn active" onclick="setLOB(this)">All</button><button class="lob-btn" onclick="setLOB(this)">Policy Wording</button><button class="lob-btn" onclick="setLOB(this)">Claims Docs</button><button class="lob-btn" onclick="setLOB(this)">Medical Reports</button><button class="lob-btn" onclick="setLOB(this)">Bordereau</button></div><div class="pbody"><div style="border:2px dashed #f0f0f0;border-radius:12px;padding:36px;text-align:center;margin-bottom:16px"><div style="font-size:34px;margin-bottom:8px">📄</div><div style="font-size:14px;font-weight:600;margin-bottom:4px">Drop any insurance document here</div><div style="font-size:12px;color:#bbb;margin-bottom:14px">PDF · Word · Excel · Images · Emails</div><button class="btn-p">Browse Files</button></div><table class="tbl"><tr><th>Document</th><th>Type</th><th>Confidence</th><th>Status</th></tr><tr><td>claim_survey_18742.pdf</td><td>Survey Report</td><td>94%</td><td><span class="pill pg">Done</span></td></tr><tr><td>bordereau_jun26.xlsx</td><td>Bordereau</td><td>99%</td><td><span class="pill pg">Done</span></td></tr><tr><td>med_report.pdf</td><td>Medical</td><td>88%</td><td><span class="pill py">Review</span></td></tr></table></div></div>
+    <div class="panel" id="panel-analytics"><div class="ph"><div><div class="ph-title">📈 Portfolio Analytics</div></div><div class="ph-right"><button class="close-btn" onclick="closeP('analytics')">✕</button></div></div><div class="lob-bar"><span class="lob-label">LOB:</span><button class="lob-btn active" onclick="setLOB(this)">All Lines</button><button class="lob-btn" onclick="setLOB(this)">Life</button><button class="lob-btn" onclick="setLOB(this)">Non-Life</button><button class="lob-btn" onclick="setLOB(this)">Health</button></div><div class="pbody"><div class="kpi-row"><div class="kpi"><div class="kpi-val">$2.4B</div><div class="kpi-label">GWP</div><div class="kpi-delta up">▲12.4%</div></div><div class="kpi"><div class="kpi-val">58.3%</div><div class="kpi-label">Loss Ratio</div><div class="kpi-delta up">▼2.1pp</div></div><div class="kpi"><div class="kpi-val">184K</div><div class="kpi-label">Policyholders</div></div></div><div class="res-box">Portfolio performing above plan. Motor loss ratio improved −3.2pp. Health −1.8pp. Property elevated post-flood — monitor Q3 cat exposure closely.</div></div></div>
+
+  </div><!-- /layout -->
+</div><!-- /app -->
+
+<!-- SETTINGS MODAL -->
+<div class="modal-bg" id="settings-modal">
+  <div class="modal">
+    <div class="modal-title">⚙️ Settings <button class="modal-close" onclick="closeSettings()">✕</button></div>
+    <div class="fg" style="margin-bottom:14px"><label style="font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.5px">Primary Region</label><select class="fc" style="margin-top:4px" id="s-region"><option>🇮🇳 India (IRDAI)</option><option>🇬🇧 UK (FCA/PRA)</option><option>🇺🇸 USA (NAIC)</option><option>🇸🇬 Singapore (MAS)</option><option>🇦🇪 UAE</option><option>🌐 Global</option></select></div>
+    <div class="fg" style="margin-bottom:14px"><label style="font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.5px">Lines of Business</label><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px"><label style="display:flex;gap:6px;font-size:12px;align-items:center"><input type="checkbox" checked/> Life Insurance</label><label style="display:flex;gap:6px;font-size:12px;align-items:center"><input type="checkbox" checked/> Non-Life / P&C</label><label style="display:flex;gap:6px;font-size:12px;align-items:center"><input type="checkbox"/> Health Insurance</label><label style="display:flex;gap:6px;font-size:12px;align-items:center"><input type="checkbox"/> Reinsurance</label><label style="display:flex;gap:6px;font-size:12px;align-items:center"><input type="checkbox"/> Marine &amp; Aviation</label><label style="display:flex;gap:6px;font-size:12px;align-items:center"><input type="checkbox"/> General Commercial</label></div></div>
+    <div class="fg" style="margin-bottom:4px"><label style="font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.5px">Thinking Mode Default</label><select class="fc" style="margin-top:4px"><option>Simple</option><option>Advanced Thinking</option><option>Expert / Quantitative</option></select></div>
+    <div class="modal-foot"><button class="btn-o" onclick="closeSettings()">Cancel</button><button class="btn-p" onclick="saveSettings()">Save Changes</button></div>
+  </div>
+</div>
+
+<script>
+// ── Onboarding ─────────────────────────────────────────────────
+let ob = { region:'', regionLabel:'', lobs:[], role:'' };
+function obNext(step) {
+  if(step===1){ ob.region=document.getElementById('ob-region').value; ob.regionLabel=document.getElementById('ob-region').options[document.getElementById('ob-region').selectedIndex].text; }
+  if(step===2 && ob.lobs.length===0){ alert('Please select at least one line of business.'); return; }
+  document.getElementById('step'+step).classList.remove('active');
+  document.getElementById('step'+(step+1)).classList.add('active');
+  for(let i=1;i<=3;i++) document.getElementById('d'+i).classList.toggle('active', i<=step+1);
+}
+function obBack(step){
+  document.getElementById('step'+step).classList.remove('active');
+  document.getElementById('step'+(step-1)).classList.add('active');
+  for(let i=1;i<=3;i++) document.getElementById('d'+i).classList.toggle('active', i<=step-1);
+}
+function toggleLob(el, lob){
+  el.classList.toggle('sel');
+  if(el.classList.contains('sel')) ob.lobs.push(lob); else ob.lobs=ob.lobs.filter(l=>l!==lob);
+  document.getElementById('btn2').disabled=ob.lobs.length===0;
+}
+function selectRole(el, role){
+  document.querySelectorAll('.ob-opt').forEach(o=>o.classList.remove('sel'));
+  el.classList.add('sel'); ob.role=role;
+  document.getElementById('btn3').disabled=false;
+}
+function launchApp(){
+  document.getElementById('onboarding').style.display='none';
+  document.getElementById('app').classList.add('visible');
+  // Set context badge
+  const regionMap={'IN':'🇮🇳 India','GB':'🇬🇧 UK','US':'🇺🇸 USA','SG':'🇸🇬 Singapore','AE':'🇦🇪 UAE','GL':'🌐 Global','DE':'🇩🇪 Germany','AU':'🇦🇺 Australia','MY':'🇲🇾 Malaysia','JP':'🇯🇵 Japan','HK':'🇭🇰 HK','CN':'🇨🇳 China','SA':'🇸🇦 Saudi','ZA':'🇿🇦 SA','FR':'🇫🇷 France','CH':'🇨🇭 Switzerland','EU':'🇪🇺 EU','CA':'🇨🇦 Canada','BR':'🇧🇷 Brazil'};
+  const lobNames={'life':'Life','nonlife':'Non-Life','health':'Health','reins':'Reins','general':'General','marine':'Marine'};
+  const lobStr = ob.lobs.map(l=>lobNames[l]||l).slice(0,2).join(' + ') + (ob.lobs.length>2 ? ' +'+(ob.lobs.length-2) : '');
+  document.getElementById('ctx-badge').textContent = (regionMap[ob.region]||ob.region) + ' · ' + (lobStr||'All LOBs');
+  const roleGreet={'actuary':'Ready for actuarial work. Ask me about pricing models, IBNR, IFRS 17, reserving, or open the Actuarial Workbench.','uw':'Ready to help with underwriting decisions. Ask me anything or open the Underwriting Desk.','claims':'Claims Intelligence ready. Ask about FNOL, fraud scoring, reserve calculations, or loss adjusting.','compliance':'Compliance Hub loaded with '+ob.regionLabel+' regulatory data. Ask about circulars, governance, or solvency.','distribution':'Distribution Hub ready. Ask about campaigns, agent analytics, persistency, or reward simulations.','exec':'Portfolio overview ready. Ask about GWP, loss ratios, capital, or open Analytics.'};
+  document.getElementById('wlc-sub').textContent = roleGreet[ob.role] || 'How can I help you today?';
+  // Set avatar initials from region
+  const av = document.getElementById('top-avatar');
+  if(av) av.textContent = ob.region ? ob.region.slice(0,2) : '✦';
+}
+
+// ── Mode ──────────────────────────────────────────────────────
+let mode='simple';
+const modeHints={simple:'Simple · fast answers',advanced:'Advanced Thinking · shows reasoning chain',expert:'Expert · Quantitative · R/Python + full citations'};
+function setMode(m,btn){
+  mode=m;
+  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('mode-hint').textContent=modeHints[m];
+}
+
+// ── Sidebar ────────────────────────────────────────────────────
+let sbX=false;
+function toggleSB(){ sbX=!sbX; document.getElementById('sidebar').classList.toggle('expanded',sbX); }
+
+// ── Panels ─────────────────────────────────────────────────────
+let curP=null;
+function openP(id){
+  if(curP&&curP!==id) closeP(curP);
+  curP=id;
+  document.getElementById('panel-'+id).classList.add('open');
+}
+function closeP(id){ const el=document.getElementById('panel-'+id); if(el) el.classList.remove('open'); curP=null; }
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&curP)closeP(curP);});
+
+// ── Tabs ──────────────────────────────────────────────────────
+function swTab(panel,tab,btn){
+  document.querySelectorAll('[id^="'+panel+'-"]').forEach(el=>el.style.display='none');
+  const t=document.getElementById(panel+'-'+tab); if(t) t.style.display='block';
+  btn.closest('.ptabs').querySelectorAll('.ptab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ── LOB filter ────────────────────────────────────────────────
+function setLOB(btn){
+  btn.closest('.lob-bar').querySelectorAll('.lob-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ── Chat ──────────────────────────────────────────────────────
+let welcomed=true;
+function goHome(){ document.getElementById('welcome').style.display='flex'; welcomed=true; }
+function autoResize(el){ el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,180)+'px'; }
+function handleKey(e){ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg();} }
+
+const KB=[
+  {k:['glm','pricing model','poisson','gamma','gini'],l:'l1',conf:'High',src:'CAS Monograph 5 · vela R package',
+   s:'A GLM motor pricing model uses two sub-models: a <strong>frequency model</strong> (Poisson family — how often claims occur) and a <strong>severity model</strong> (Gamma family — how large they are). Pure premium = Freq × Sev. Key rating factors for motor: driver age, NCB, vehicle CC, zone, and usage type. Use <code>vela_gini()</code> to validate — target Gini of 0.40–0.55 for a well-fitted model. Open the <strong>Actuarial Workbench → Pricing Models</strong> for the full R code template.',
+   a:'<details class="think-block"><summary>🤔 Thinking through this…</summary>Identifying request as actuarial pricing · Routing to L1 Reasoning · Retrieving CAS methodology · Selecting GLM explanation appropriate to mode</details>In GLM pricing for motor, the conventional two-part multiplicative structure (frequency × severity) is preferred because claim counts and amounts have different distributional properties. The <strong>frequency model</strong> uses a Poisson GLM with log link and policy exposure as an offset — this correctly handles policies with varying coverage periods. The <strong>severity model</strong> uses a Gamma GLM (log link) fitted on positive losses only. The Tweedie distribution provides a one-stage alternative but requires careful power parameter selection (ρ ≈ 1.6–1.8 for motor). Open the Actuarial Workbench for the full <code>vela</code> R code implementation including one-way plots and Gini validation.'},
+  {k:['ibnr','chain-ladder','reserving','bornhuetter','bornhuetter-ferguson'],l:'l1',conf:'High',src:'CAS Study Note: Friedland (2010)',
+   s:'IBNR (Incurred But Not Reported) is estimated by projecting reported losses to ultimate using development factors. Chain-Ladder applies historical LDFs; Bornhuetter-Ferguson blends LDF projection with an a priori ELR; Cape Cod derives the ELR from the data itself. Open the <strong>Actuarial Workbench → Reserving</strong> for a full triangle analysis.',
+   a:'Chain-ladder, BF, and Cape Cod each suit different stages of claims maturity. For immature accident years (AY2023-24), Cape Cod is preferred as CL over-relies on sparse early development. Run <code>vela::bootstrap_reserve(n_sim=1000, method="ODP")</code> to get a full reserve distribution — output includes P25/P50/P75/P95. See the Reserving tab for a live example.'},
+  {k:['ifrs 17','ifrs17','csm','bba','paa','lrc','contractual service'],l:'l1',conf:'High',src:'IFRS 17 ¶37, ¶53, ¶101',
+   s:'IFRS 17 has two main measurement models: the <strong>Building Block Approach (BBA)</strong> — also called General Measurement Model — uses the full CSM + Risk Adjustment + Best Estimate structure. The <strong>Premium Allocation Approach (PAA)</strong> is a simplified method eligible when coverage period ≤ 12 months OR when PAA results would not materially differ from BBA. Most non-life insurers use PAA; life insurers use BBA.',
+   a:'Under IFRS 17, the CSM represents unearned profit to be recognised as insurance service is provided. Key movements: (1) New contracts — CSM set at initial recognition to eliminate day-1 gain; (2) Interest accretion — CSM grows at locked-in rate; (3) Changes in estimates — adjusting CSM for changes to future service; (4) Release — recognised in P&L as coverage units earned. Use <code>vela.ifrs17.csm_calc()</code> for automated CSM roll-forward. <span style="color:#7c5cfc;text-decoration:underline;cursor:pointer">[IFRS 17 ¶44]</span>'},
+  {k:['non-disclosure','case law','precedent','material fact','pan atlantic','section 45'],l:'l2',conf:'High',src:'Pan Atlantic [1994] UKHL 8 · Insurance Act 2015',
+   s:'The leading UK case on non-disclosure is <em>Pan Atlantic Insurance Co Ltd v Pine Top Insurance Co</em> [1994] UKHL 8 — House of Lords established the inducement test: insurer must prove (1) the fact was material to a prudent insurer AND (2) it actually induced them to write on those terms. For India, the key provision is <strong>Section 45 of the Insurance Act 1938</strong> — after 2 years, life insurers cannot repudiate unless fraud is proven AND there is a causal nexus between the suppressed fact and the claim. See the <strong>Legal Hub</strong> for more precedents.',
+   a:'Build your litigation strategy in the Legal Hub — select your position (insurer/policyholder), LOB, and describe the facts. Vela will match against 180K+ indexed cases across UK, India, US, and Lloyd\'s arbitration, identify analogous precedents, distinguish unfavourable cases, and produce a strategy memo with risk-weighted settlement advice.'},
+  {k:['campaign','ncb','renewal','retention','reward','distribution','discount'],l:'l2',conf:'High',src:'Distribution Hub · Predictive uplift model',
+   s:'A 6-month motor renewal campaign with NCB reward tiers would: target high-value policyholders 60 days before renewal · run email/SMS/WhatsApp/agent touchpoints in waves · unlock NCB Accelerator offer in week 5 for non-renewers. Predicted uplift: +4–6pp over baseline 86% retention. Open the <strong>Distribution Hub → Campaign Builder</strong> for the full plan, and <strong>→ Reward Simulation</strong> to model different discount levels with your portfolio\'s elasticity.',
+   a:'The predictive uplift model uses a logistic regression on historical renewal behaviour, with price elasticity estimated at −0.6 (medium) for a standard personal lines portfolio. Optimal discount band is 6–8% — below this, uplift is insufficient to cover campaign cost; above 10%, diminishing returns erode margin. Run the simulation slider in Distribution Hub to find your portfolio\'s optimum.'},
+  {k:['irdai','fca','regulatory','compliance','circular','solvency ii','scr'],l:'l2',conf:'High',src:'Compliance Hub · Regulatory Archive',
+   s:'I have live access to regulatory publications from IRDAI, FCA, NAIC, BaFin, MAS, SAMA, and IAIS. Your context is set to <strong>India (IRDAI)</strong>. Recent key circulars: IRDAI/NL/2026/42 (Motor TP rates revised from 1 Jul 2026), IRDAI/Life/2026/38 (ULIP expense cap 2.25%), IRDAI/HLT/2026/31 (Bima Sugam standardised exclusions). Open the <strong>Compliance Hub</strong> for the full filing calendar and gap analysis.',
+   a:'Under Solvency II, the SCR is calibrated to a 99.5% VaR over a 1-year horizon. Standard Formula combines market, counterparty default, underwriting (life, non-life, health), and intangible asset risk modules. For IRDAI solvency: the required solvency margin is the higher of ₹50 crore absolute minimum OR the factor-based calculation (20% of net premium for non-life, 150% of required amount for life). Open Finance & IFRS 17 panel for capital calculations.'}
+];
+
+function findKB(text){ const t=text.toLowerCase(); return KB.find(k=>k.k.some(w=>t.includes(w))); }
+
+// ── Real AI backend ────────────────────────────────────────────
+// Paste your Cloudflare Worker URL here after deploying (Phase E)
+// e.g. 'https://vela-api.velaapi.workers.dev'
+// ⚠️  REPLACE THIS WITH YOUR ACTUAL CLOUDFLARE WORKER URL
+// e.g. 'https://vela-api.velaapi.workers.dev'
+const WORKER_URL = 'https://vela-api.velaai.workers.dev';
+
+let conversationHistory = [];
+
+async function callVelaAI(userMessage) {
+  try {
+    const res = await fetch(WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: userMessage,
+        region: ob.region || 'IN',
+        lob: ob.lobs && ob.lobs.length ? ob.lobs : ['life'],
+        role: ob.role || 'actuary',
+        mode: mode || 'simple',
+        history: conversationHistory.slice(-6)
+      })
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    conversationHistory.push({role:'user', content:userMessage});
+    conversationHistory.push({role:'assistant', content:data.reply});
+    return data.reply;
+  } catch(e) {
+    console.warn('Vela AI call failed, using KB fallback:', e.message);
+    return null;
+  }
+}
+
+async function sendMsg(){
+  const input=document.getElementById('chat-input');
+  const text=input.value.trim(); if(!text) return;
+  if(welcomed){ document.getElementById('welcome').style.display='none'; welcomed=false; }
+  addUser(text); input.value=''; input.style.height='auto';
+  document.getElementById('send-btn').disabled=true;
+
+  // Show typing indicator
+  const ci=document.getElementById('chat-inner');
+  const typing=document.createElement('div');
+  typing.className='msg'; typing.id='vela-typing';
+  typing.innerHTML=`<div class="ma ai">✦</div><div class="mb"><div class="bbl ai" style="color:#aaa;font-style:italic">Vela is thinking<span id="vela-dots">.</span></div></div>`;
+  ci.appendChild(typing); typing.scrollIntoView({behavior:'smooth',block:'end'});
+  const dotsInterval = setInterval(()=>{
+    const el=document.getElementById('vela-dots');
+    if(el) el.textContent = el.textContent.length >= 3 ? '.' : el.textContent+'.';
+  }, 400);
+
+  // Call real AI if Worker URL is set, otherwise use KB
+  const workerReady = WORKER_URL && !WORKER_URL.includes('YOUR_SUBDOMAIN');
+  const aiReply = workerReady ? await callVelaAI(text) : null;
+
+  clearInterval(dotsInterval);
+  const ind=document.getElementById('vela-typing'); if(ind) ind.remove();
+
+  addAI(text, aiReply);
+  document.getElementById('send-btn').disabled=false;
+}
+
+function addUser(text){
+  const ci=document.getElementById('chat-inner');
+  const d=document.createElement('div'); d.className='msg user';
+  d.innerHTML=`<div class="ma user">SS</div><div class="mb"><div class="bbl user">${text}</div></div>`;
+  ci.appendChild(d); d.scrollIntoView({behavior:'smooth',block:'end'});
+}
+
+function addAI(query, aiReply){
+  const ci=document.getElementById('chat-inner');
+  const d=document.createElement('div'); d.className='msg';
+  let body='';
+
+  if(aiReply){
+    // Real AI response — full markdown renderer
+    function renderMD(text){
+      let s = text
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      // Code blocks
+      s = s.replace(/```[\s\S]*?```/g, m => {
+        const code = m.replace(/^```[^\n]*\n?/,'').replace(/```$/,'');
+        return `<pre style="background:#1e1e2e;color:#cdd6f4;padding:12px;border-radius:8px;font-size:11.5px;overflow-x:auto;margin:8px 0;font-family:'SF Mono',monospace;line-height:1.6">${code}</pre>`;
+      });
+      // Inline code
+      s = s.replace(/`([^`\n]+)`/g,'<code style="background:#f0eeff;padding:1px 5px;border-radius:4px;font-family:monospace;font-size:12px;color:#5b21b6">$1</code>');
+      // Bold
+      s = s.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
+      // Italic
+      s = s.replace(/\*(.*?)\*/g,'<em>$1</em>');
+      // H3
+      s = s.replace(/^### (.+)$/gm,'<p style="font-weight:700;color:#1a1a1a;margin:10px 0 4px">$1</p>');
+      // H2
+      s = s.replace(/^## (.+)$/gm,'<p style="font-weight:800;font-size:14px;color:#7c5cfc;margin:12px 0 4px;border-bottom:1px solid #f0f0f0;padding-bottom:3px">$1</p>');
+      // H1
+      s = s.replace(/^# (.+)$/gm,'<p style="font-weight:800;font-size:15px;color:#1a1a1a;margin:14px 0 6px">$1</p>');
+      // Numbered list
+      s = s.replace(/^\d+\.\s+(.+)$/gm,'<div style="display:flex;gap:8px;margin:3px 0"><span style="color:#7c5cfc;font-weight:700;flex-shrink:0">•</span><span>$1</span></div>');
+      // Bullet list
+      s = s.replace(/^[-*]\s+(.+)$/gm,'<div style="display:flex;gap:8px;margin:3px 0"><span style="color:#7c5cfc;flex-shrink:0">·</span><span>$1</span></div>');
+      // Horizontal rule
+      s = s.replace(/^---+$/gm,'<hr style="border:none;border-top:1px solid #f0f0f0;margin:10px 0">');
+      // Double newlines → paragraphs
+      s = s.replace(/\n\n+/g,'</p><p style="margin-top:8px">');
+      // Single newlines
+      s = s.replace(/\n/g,'<br>');
+      return s;
+    }
+    if(mode==='advanced'){
+      body+=`<details class="think-block"><summary>🤔 AI context used</summary>Region: ${ob.region||'IN'} · LOB: ${(ob.lobs||[]).join(', ')||'All'} · Role: ${ob.role||'actuary'} · Mode: ${mode}</details>`;
+    }
+    body+=`<div class="bbl ai"><p>${renderMD(aiReply)}</p></div>`;
+    body+=`<div class="mmeta"><span class="tp tp-l2">Live AI</span><span class="tp tp-conf">Llama 3.3 70B · Groq</span></div>`;
+  } else {
+    // KB / offline fallback
+    const kb=findKB(query);
+    if(mode==='advanced' && kb && kb.a) body+=`<details class="think-block"><summary>🤔 Reasoning steps</summary>${kb.a.split('\n')[0]||'Routing to specialist domain…'}</details>`;
+    const txt = kb
+      ? (mode==='expert' && kb.a ? kb.a.replace(/<details[^>]*>.*?<\/details>/s,'') : kb.s)
+      : `I'm Vela — your insurance intelligence platform. I have deep expertise in actuarial science, underwriting, claims, reinsurance, IFRS 17, compliance, legal case law, and distribution. Open a workbench or hub from the sidebar to get started, or ask a specific insurance question.`;
+    body+=`<div class="bbl ai">${txt}</div>`;
+    if(kb) body+=`<div class="mmeta"><span class="tp ${kb.l}">${kb.l==='l1'?'L1 · Reasoning':'L2 · Specialist'}</span><span class="tp tp-conf">Conf: ${kb.conf}</span><span class="tp-src">[${kb.src}]</span></div>`;
+  }
+
+  d.innerHTML=`<div class="ma ai">✦</div><div class="mb">${body}</div>`;
+  ci.appendChild(d); d.scrollIntoView({behavior:'smooth',block:'end'});
+}
+
+// ── Panel actions ──────────────────────────────────────────────
+function cpCode(btn){ navigator.clipboard.writeText(btn.parentElement.innerText.replace('Copy','').trim()).then(()=>{btn.textContent='Copied!';setTimeout(()=>btn.textContent='Copy',2000);}); }
+function showUW(){ document.getElementById('uw-out').style.display='block'; document.getElementById('uw-out').scrollIntoView({behavior:'smooth'}); }
+function genCampaign(){ document.getElementById('dist-camp-out').style.display='block'; document.getElementById('dist-camp-out').scrollIntoView({behavior:'smooth'}); }
+function updateSim(v){
+  document.getElementById('disc-v').textContent=v+'%';
+  const u=(v*0.6).toFixed(1); const ok=v>=5&&v<=10;
+  document.getElementById('sim-out').innerHTML=`<strong>${v}% discount · Medium elasticity</strong><br>Retention uplift: <strong>+${u}pp → ${(86+parseFloat(u)).toFixed(1)}%</strong> · Additional policies: ~${Math.round(v*289).toLocaleString()}<br>Discount cost: <strong>₹${(v*0.26).toFixed(1)}Cr</strong> · Net incremental GWP: <strong>₹${(u*1.35).toFixed(1)}Cr</strong><br><span style="color:${ok?'#059669':'#d97706'};font-weight:700">${ok?'✓ ROI-positive — optimal band':'⚠ '+(v>10?'Diminishing returns above 10%':'Uplift may not cover campaign cost')}</span>`;
+}
+async function askComp(){
+  const q=document.getElementById('comp-q').value; if(!q) return;
+  const a=document.getElementById('comp-ans'); a.style.display='block';
+  a.innerHTML='<em style="color:#aaa">Vela is searching regulations…</em>';
+  const reply = await callVelaAI('Compliance question for '+ob.regionLabel+': '+q+'. Cite specific circular numbers, section references, and regulatory provisions.');
+  if(reply){ function renderMD2(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/`([^`]+)`/g,'<code style="background:#f0eeff;padding:1px 4px;border-radius:3px;font-size:11px">$1</code>').replace(/\n/g,'<br>');} a.innerHTML='<strong style="color:#7c5cfc">Vela:</strong> '+renderMD2(reply); }
+  else a.innerHTML='<em style="color:#aaa">AI unavailable — check Worker connection.</em>';
+}
+async function askIFRS(){
+  const q=document.getElementById('ifrs-q').value; if(!q) return;
+  const a=document.getElementById('ifrs-a'); a.style.display='block';
+  a.innerHTML='<em style="color:#aaa">Vela is calculating…</em>';
+  const reply = await callVelaAI('IFRS 17 / Actuarial finance question: '+q+'. Include paragraph references (IFRS 17 ¶XX), methodology, and worked example if relevant.');
+  if(reply){ function renderMD3(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/`([^`]+)`/g,'<code style="background:#f0eeff;padding:1px 4px;border-radius:3px;font-size:11px">$1</code>').replace(/\n/g,'<br>');} a.innerHTML='<strong style="color:#7c5cfc">Vela:</strong> '+renderMD3(reply); }
+  else a.innerHTML='<em style="color:#aaa">AI unavailable — check Worker connection.</em>';
+}
+async function doLegal(){
+  const q=document.getElementById('legal-q') ? document.getElementById('legal-q').value : '';
+  const a=document.getElementById('legal-ans');
+  if(!a) return;
+  a.style.display='block'; a.innerHTML='<em style="color:#aaa">Vela is searching case archives…</em>';
+  const prompt = q ? 'Legal insurance question for '+ob.regionLabel+': '+q+'. Cite relevant case law (with citation), applicable legislation sections, and strategic implications.' : 'Summarise key insurance legal precedents relevant to '+ob.regionLabel+' insurers in 2024–2026.';
+  const reply = await callVelaAI(prompt);
+  if(reply){ function renderMD4(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');} a.innerHTML='<strong style="color:#7c5cfc">Vela:</strong> '+renderMD4(reply); }
+  else a.innerHTML='<em style="color:#aaa">AI unavailable — check Worker connection.</em>';
+}
+
+// ── Settings ──────────────────────────────────────────────────
+function openSettings(){ document.getElementById('settings-modal').classList.add('open'); }
+function closeSettings(){ document.getElementById('settings-modal').classList.remove('open'); }
+function saveSettings(){ closeSettings(); }
+</script>
+</body>
+</html>
